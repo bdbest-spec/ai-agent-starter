@@ -1,13 +1,14 @@
 # AI Agent Starter
 
-This repository contains a minimal AI agent starter project built with Python, FastAPI, and OpenAI function calling.
+A minimal starter project for building an AI agent with Python, FastAPI, and OpenAI function-calling.
 
-## Features
-- FastAPI backend
+## What this includes
+
+- FastAPI app
 - `/health` endpoint
 - `/chat` endpoint
-- OpenAI function calling demo
-- Simple tool-based agent loop
+- Demo tool-calling functions
+- Basic environment configuration
 
 ## Local setup
 
@@ -18,7 +19,7 @@ pip install -r requirements.txt
 cp .env.example .env
 ```
 
-Then add your OpenAI API key to `.env`:
+Then add your OpenAI API key in `.env`:
 
 ```bash
 OPENAI_API_KEY=your_key_here
@@ -31,12 +32,12 @@ MODEL=gpt-4o-mini
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## Example request
+## Test the chat endpoint
 
 ```bash
 curl -X POST http://localhost:8000/chat \
   -H "Content-Type: application/json" \
-  -d '{"message": "Tell me a fact about Python and also give me the current time in Tokyo."}'
+  -d '{"message": "Tell me a fact about Python and the time in Tokyo."}'
 ```
 
 ## Project structure
@@ -51,12 +52,10 @@ requirements.txt
 README.md
 ```
 
-## Notes
+## Next ideas
 
-This is intentionally a lightweight starter to help you build a more advanced agent with:
-- memory
-- database integration
-- web search tools
-- authentication
-- background jobs
-- deployment to cloud platforms
+- Add memory with Redis or SQLite
+- Add web search tool
+- Add user auth
+- Add RAG over documents
+- Deploy to Railway, Render, Fly.io, or Azure

@@ -1,11 +1,10 @@
 import json
 import os
-from typing import Any
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
 from openai import OpenAI
+from pydantic import BaseModel
 
 load_dotenv()
 
@@ -31,10 +30,10 @@ def get_time_in_timezone(city: str) -> str:
 def get_fact(topic: str) -> str:
     fact_bank = {
         "python": "Python was created by Guido van Rossum and is widely used for automation, web apps, and AI.",
-        "ai": "AI systems often use large language models to reason over text and call tools when needed.",
+        "ai": "AI agents often use LLMs plus tools to gather information and complete tasks.",
         "space": "The Moon is slowly moving away from Earth by about 3.8 centimeters per year.",
     }
-    return fact_bank.get(topic.lower(), f"Here is a quick fact about {topic}: it is a fascinating topic to explore.")
+    return fact_bank.get(topic.lower(), f"Here is a quick fact about {topic}: it is a fascinating subject to explore.")
 
 
 @app.get("/health")
@@ -43,7 +42,7 @@ def health() -> dict[str, str]:
 
 
 @app.post("/chat")
-def chat(request: ChatRequest) -> dict[str, Any]:
+def chat(request: ChatRequest) -> dict[str, object]:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="OPENAI_API_KEY is missing. Add it to your .env file.")
@@ -81,14 +80,14 @@ def chat(request: ChatRequest) -> dict[str, Any]:
         },
     ]
 
-    response = client.chat.completions.create(
+    completion = client.chat.completions.create(
         model=model,
         messages=[{"role": "user", "content": request.message}],
         tools=tools,
         tool_choice="auto",
     )
 
-    message = response.choices[0].message
+    message = completion.choices[0].message
     tool_calls = message.tool_calls
 
     if not tool_calls:
@@ -105,7 +104,7 @@ def chat(request: ChatRequest) -> dict[str, Any]:
     else:
         tool_result = f"Unsupported tool: {function_name}"
 
-    second_response = client.chat.completions.create(
+    followup = client.chat.completions.create(
         model=model,
         messages=[
             {"role": "user", "content": request.message},
@@ -119,7 +118,7 @@ def chat(request: ChatRequest) -> dict[str, Any]:
         ],
     )
 
-    return {"response": second_response.choices[0].message.content or "Tool executed successfully."}
+    return {"response": followup.choices[0].message.content or "Tool executed successfully."}
 
 
 if __name__ == "__main__":
