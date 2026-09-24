@@ -1,14 +1,20 @@
+from __future__ import annotations
+
 import json
 import os
+from typing import Any
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from openai import OpenAI
 from pydantic import BaseModel
 
+from app.agent_prompt import SYSTEM_PROMPT
+from app.ethics import ethical_guard, get_ethics_summary
+
 load_dotenv()
 
-app = FastAPI(title="AI Agent Starter", version="0.1.0")
+app = FastAPI(title="Ethical AI Agent", version="0.1.0")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
@@ -23,17 +29,19 @@ def get_time_in_timezone(city: str) -> str:
         "london": "2026-09-24 04:00 BST",
         "new york": "2026-09-24 00:00 EDT",
         "dubai": "2026-09-24 07:00 GST",
+        "dhaka": "2026-09-24 11:30 BST",
     }
-    return city_map.get(city.lower(), f"I don't have a timezone entry for {city} in this demo tool.")
+    return city_map.get(city.lower(), f"I do not have a timezone entry for {city} in this demo tool.")
 
 
 def get_fact(topic: str) -> str:
     fact_bank = {
-        "python": "Python was created by Guido van Rossum and is widely used for automation, web apps, and AI.",
-        "ai": "AI agents often use LLMs plus tools to gather information and complete tasks.",
-        "space": "The Moon is slowly moving away from Earth by about 3.8 centimeters per year.",
+        "python": "Python was created by Guido van Rossum and is widely used for automation, AI, and web development.",
+        "ai": "AI systems often use language models plus tools to reason and act in structured ways.",
+        "ethics": "Many traditions emphasize truthfulness, justice, mercy, wisdom, and responsibility as moral foundations.",
+        "quran": "The Quran emphasizes truth, justice, mercy, reflection, and moral accountability.",
     }
-    return fact_bank.get(topic.lower(), f"Here is a quick fact about {topic}: it is a fascinating subject to explore.")
+    return fact_bank.get(topic.lower(), f"Here is a general fact about {topic}: it is an important topic worth studying carefully with evidence.")
 
 
 @app.get("/health")
@@ -41,11 +49,20 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/ethics")
+def ethics() -> dict[str, str]:
+    return {"values": get_ethics_summary()}
+
+
 @app.post("/chat")
-def chat(request: ChatRequest) -> dict[str, object]:
+def chat(request: ChatRequest) -> dict[str, Any]:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise HTTPException(status_code=500, detail="OPENAI_API_KEY is missing. Add it to your .env file.")
+
+    allowed, reason = ethical_guard(request.message)
+    if not allowed:
+        return {"response": f"I cannot help with that request. {reason} Please ask for a safe and lawful alternative."}
 
     model = request.model or os.getenv("MODEL", "gpt-4o-mini")
 
@@ -58,7 +75,7 @@ def chat(request: ChatRequest) -> dict[str, object]:
                 "parameters": {
                     "type": "object",
                     "properties": {
-                        "city": {"type": "string", "description": "City name such as Tokyo, London, or New York"}
+                        "city": {"type": "string", "description": "City name, such as Tokyo, Dhaka, London, or New York"}
                     },
                     "required": ["city"],
                 },
@@ -68,7 +85,7 @@ def chat(request: ChatRequest) -> dict[str, object]:
             "type": "function",
             "function": {
                 "name": "get_fact",
-                "description": "Return a short fact about a topic.",
+                "description": "Return a short fact about a given topic.",
                 "parameters": {
                     "type": "object",
                     "properties": {
@@ -82,7 +99,10 @@ def chat(request: ChatRequest) -> dict[str, object]:
 
     completion = client.chat.completions.create(
         model=model,
-        messages=[{"role": "user", "content": request.message}],
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": request.message},
+        ],
         tools=tools,
         tool_choice="auto",
     )
@@ -91,7 +111,7 @@ def chat(request: ChatRequest) -> dict[str, object]:
     tool_calls = message.tool_calls
 
     if not tool_calls:
-        return {"response": message.content or "I don't have a direct answer."}
+        return {"response": message.content or "I do not have a direct answer."}
 
     tool_call = tool_calls[0]
     function_name = tool_call.function.name
@@ -107,6 +127,7 @@ def chat(request: ChatRequest) -> dict[str, object]:
     followup = client.chat.completions.create(
         model=model,
         messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": request.message},
             {"role": "assistant", "content": None, "tool_calls": tool_calls},
             {
@@ -118,7 +139,8 @@ def chat(request: ChatRequest) -> dict[str, object]:
         ],
     )
 
-    return {"response": followup.choices[0].message.content or "Tool executed successfully."}
+    final_text = followup.choices[0].message.content or "The tool ran successfully."
+    return {"response": final_text}
 
 
 if __name__ == "__main__":
