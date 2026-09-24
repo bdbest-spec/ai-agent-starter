@@ -1,0 +1,35 @@
+{
+  "schema_version": "1.0",
+  "repository": {
+    "owner": "bdbest-spec",
+    "name": "ai-agent-starter",
+    "branch": "main",
+    "write_permission": true,
+    "confirmation_status": "accepted"
+  },
+  "approval_policy": {
+    "read_operations": "allowed",
+    "write_operations": "require_explicit_confirmation",
+    "delete_operations": "require_explicit_confirmation",
+    "secret_changes": "never_commit_secrets"
+  },
+  "allowed_operations": [
+    "create_file",
+    "update_file",
+    "push_commit"
+  ],
+  "ethical_policy": {
+    "truthfulness": true,
+    "fact_checking": true,
+    "privacy_protection": true,
+    "least_privilege": true,
+    "harm_prevention": true,
+    "respect_religion_and_culture": true
+  },
+  "agent_behavior": {
+    "uncertain_information": "state_uncertainty_and_request_verification",
+    "unsafe_request": "refuse_and_offer_safe_alternative",
+    "technical_changes": "inspect_then_plan_then_modify",
+    "final_response": "summarize_changes_and_commit_link"
+  }
+}
