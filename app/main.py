@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import json
 import os
+from pathlib import Path
 from typing import Any
 
 from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from openai import OpenAI
 from pydantic import BaseModel
 
@@ -14,7 +17,11 @@ from app.ethics import ethical_guard, get_ethics_summary
 
 load_dotenv()
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+WEB_DIR = BASE_DIR / "web"
+
 app = FastAPI(title="Ethical AI Agent", version="0.1.0")
+app.mount("/static", StaticFiles(directory=WEB_DIR), name="static")
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 
@@ -42,6 +49,11 @@ def get_fact(topic: str) -> str:
         "quran": "The Quran emphasizes truth, justice, mercy, reflection, and moral accountability.",
     }
     return fact_bank.get(topic.lower(), f"Here is a general fact about {topic}: it is an important topic worth studying carefully with evidence.")
+
+
+@app.get("/")
+def home() -> FileResponse:
+    return FileResponse(WEB_DIR / "index.html")
 
 
 @app.get("/health")

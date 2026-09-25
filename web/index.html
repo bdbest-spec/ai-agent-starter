@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="A truthful, safe, and evidence-based AI assistant." />
+    <title>Amanah Ethos AI</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <section class="hero">
+        <p class="eyebrow">AMANAH ETHOS AI</p>
+        <h1>Useful answers, guided by truth and responsibility.</h1>
+        <p class="intro">Ask a question and receive a clear, respectful response from your ethical AI assistant.</p>
+      </section>
+
+      <section class="panel" aria-label="Chat with Amanah Ethos AI">
+        <div id="status" class="status" role="status">Ready</div>
+        <div id="conversation" class="conversation" aria-live="polite">
+          <div class="message assistant">Assalamu alaikum. How can I help you today?</div>
+        </div>
+        <form id="chat-form" class="chat-form">
+          <label class="sr-only" for="message">Your message</label>
+          <textarea id="message" name="message" rows="3" placeholder="Ask a question..." required></textarea>
+          <button type="submit">Send message</button>
+        </form>
+      </section>
+
+      <section class="values">
+        <h2>Our commitments</h2>
+        <div class="value-grid">
+          <article><strong>Truthfulness</strong><span>No invented facts or false certainty.</span></article>
+          <article><strong>Safety</strong><span>Harmful and unauthorized requests are refused.</span></article>
+          <article><strong>Respect</strong><span>Dignity, privacy, and cultural respect come first.</span></article>
+        </div>
+      </section>
+    </main>
+    <script src="/static/app.js"></script>
+  </body>
+</html>
