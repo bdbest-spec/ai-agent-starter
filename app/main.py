@@ -14,6 +14,7 @@ from pydantic import BaseModel
 
 from app.agent_prompt import SYSTEM_PROMPT
 from app.ethics import ethical_guard, get_ethics_summary
+from app.tools import TOOLS
 
 load_dotenv()
 
@@ -78,44 +79,13 @@ def chat(request: ChatRequest) -> dict[str, Any]:
 
     model = request.model or os.getenv("MODEL", "gpt-4o-mini")
 
-    tools = [
-        {
-            "type": "function",
-            "function": {
-                "name": "get_time_in_timezone",
-                "description": "Return a sample current time for a city in a demo app.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "city": {"type": "string", "description": "City name, such as Tokyo, Dhaka, London, or New York"}
-                    },
-                    "required": ["city"],
-                },
-            },
-        },
-        {
-            "type": "function",
-            "function": {
-                "name": "get_fact",
-                "description": "Return a short fact about a given topic.",
-                "parameters": {
-                    "type": "object",
-                    "properties": {
-                        "topic": {"type": "string", "description": "Topic to discuss"}
-                    },
-                    "required": ["topic"],
-                },
-            },
-        },
-    ]
-
     completion = client.chat.completions.create(
         model=model,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": request.message},
         ],
-        tools=tools,
+        tools=TOOLS,
         tool_choice="auto",
     )
 
